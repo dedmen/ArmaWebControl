@@ -1,3 +1,6 @@
-[submodule "lib/beast"]
-	path = lib/beast
-	url = https://github.com/boostorg/beast.git
+[submodule "intercept"]
+	path = intercept
+	url = https://github.com/intercept/intercept.git
+[submodule "boost-cmake"]
+	path = boost-cmake
+	url = https://github.com/Orphis/boost-cmake.git
