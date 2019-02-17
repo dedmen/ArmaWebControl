@@ -72,6 +72,20 @@ function executeUnitScript() {
     socket.send(JSON.stringify(msg));
 }
 
+function executeFUnitScript() {
+    var msg = {
+        type: "ExecFunc",
+        fnc: "ArmaWebControl_main_fnc_execFromUnit",
+        args: [
+            $('#unitlist').val(),
+            {
+                code: $('#execUnitScript').val()
+            }
+        ]
+    }
+    socket.send(JSON.stringify(msg));
+}
+
 
 
 function refreshPlayerList() {
@@ -85,6 +99,7 @@ function updatePlayerlistCombo() {
     $('#unitlist').empty();
     $.each(playerNames, function(i, p) {
         $('#unitlist').append($('<option></option>').val(p).html(p));
+        $('#unitlist2').append($('<option></option>').val(p).html(p));
     });
 }
 
@@ -95,11 +110,12 @@ function fillPresets(combo, list) {
     }
 }
 
-function loadPreset(combo, textbox, presetList){
+function loadPreset(combo, textbox, presetList, highlightBox){
     var presetName = $(combo).val()
     var code = presetList[presetName];
 
     $(textbox).val(code);
+    $(highlightBox).html(hljs.highlight('sqf', code).value);
 }
 
 
@@ -151,19 +167,19 @@ $(document).ready(function() {
     }//End else
 
 
-
-    for (var property in presets_All) {
-        presets_Unit.unshift({property: presets_All[property]});
-        presets_Local.unshift({property: presets_All[property]});
-        presets_Global.unshift({property: presets_All[property]});
-
-
-    }
-
+    presets_Unit = Object.assign({}, presets_All, presets_Unit);
+    presets_Local = Object.assign({}, presets_All, presets_Local);
+    presets_Global = Object.assign({}, presets_All, presets_Global);
 
     fillPresets('#unitPreset', presets_Unit);
     fillPresets('#localPreset', presets_Local);
     fillPresets('#globalPreset', presets_Global);
+    fillPresets('#unitPreset2', presets_FromUnit);
+
+    document.querySelectorAll('textarea').forEach((block) => {
+        hljs.highlightBlock(block);
+    });
+
 
 });
 

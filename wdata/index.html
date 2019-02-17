@@ -5,9 +5,21 @@
     <script src="presets_local.js"></script>
     <script src="presets_global.js"></script>
     <script src="presets_unit.js"></script>
+    <script src="presets_fromunit.js"></script>
     <script src="presets_all.js"></script>
     <script src="script.js"></script> 
     <link rel="stylesheet" href="style.css">
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.14.2/styles/agate.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.14.2/highlight.min.js"></script>
+
+    <script
+    charset="UTF-8"
+    src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/9.14.2/languages/sqf.min.js"></script>
+
+    <script>hljs.initHighlightingOnLoad();</script>
+    <!--<script src="highlight.pack.js"></script>-->
+    
 
     <title>Arma Web Control</title>
 </head>
@@ -20,6 +32,7 @@
         <button class="tablinks" onclick="openCity(event, 'ExecLocal')">ExecLocal</button>
         <button class="tablinks" onclick="openCity(event, 'ExecGlobal')">ExecGlobal</button>
         <button class="tablinks" onclick="openCity(event, 'ExecOnUnit')">ExecOnUnit</button>
+        <button class="tablinks" onclick="openCity(event, 'ExecFromUnit')">ExecFromUnit</button>
     </div>
 
     <!-- Tab content -->
@@ -36,28 +49,50 @@
     </div>
 
     <div id="ExecLocal" class="tabcontent">
+        Executes script locally</br>
         <select id="localPreset"></select>
-        <button onclick="loadPreset('#localPreset', '#execLocalScript',presets_local)">Load</button> 
-        <textarea id="execLocalScript"cols="40" rows="5"></textarea>
+        <button onclick="loadPreset('#localPreset', '#execLocalScript',presets_Local,'#codeHL')">Load</button>
+        </br>
+        <textarea id="execLocalScript" cols="40" rows="5" onKeyUp="$('#codeHL').html(hljs.highlight('sqf', $('#execLocalScript').val()).value);"></textarea>
         <button onclick="executeLocalScript()">Exec</button> 
+        <pre><code class="sqf" id="codeHL"></code></pre>
     </div>
 
     <div id="ExecGlobal" class="tabcontent">
+        Executes script everywhere</br>
         <select id="globalPreset"></select>
-        <button onclick="loadPreset('#globalPreset', '#execGlobalScript',presets_Global)">Load</button> 
-        <textarea id="execGlobalScript"cols="40" rows="5"></textarea>
+        <button onclick="loadPreset('#globalPreset', '#execGlobalScript',presets_Global,'#codeHG')">Load</button>
+        </br>
+        <textarea id="execGlobalScript" cols="40" rows="5" onKeyUp="$('#codeHG').html(hljs.highlight('sqf', $('#execGlobalScript').val()).value);"></textarea>
         <button onclick="executeGlobalScript()">Exec</button> 
+        <pre><code class="sqf" id="codeHG"></code></pre>
     </div>
 
 
     <div id="ExecOnUnit" class="tabcontent">
+        Executes script remotely on the unit's machine. Pass myself as _this</br>
         <select id="unitlist"></select>
         <button onclick="refreshPlayerList()">Update playerlist</button> 
         <select id="unitPreset"></select>
-        <button onclick="loadPreset('#unitPreset', '#execUnitScript',presets_Unit)">Load</button> 
-        <textarea id="execUnitScript"cols="40" rows="5"></textarea>
+        <button onclick="loadPreset('#unitPreset', '#execUnitScript',presets_Unit,'#codeHOU')">Load</button>
+        </br>
+        <textarea id="execUnitScript" cols="40" rows="5" onKeyUp="$('#codeHOU').html(hljs.highlight('sqf', $('#execUnitScript').val()).value);"></textarea>
         <button onclick="executeUnitScript()">Exec</button> 
+
+        <pre><code class="sqf" id="codeHOU"></code></pre>
     </div>
 
+    <div id="ExecFromUnit" class="tabcontent">
+        Executes script locally, but pass the unit in _this</br>
+        <select id="unitlist2"></select>
+        <button onclick="refreshPlayerList()">Update playerlist</button> 
+        <select id="unitPreset2"></select>
+        <button onclick="loadPreset('#unitPreset2', '#execFUnitScript', presets_FromUnit, '#codeHFU')">Load</button>
+        </br>
+        <textarea id="execFUnitScript" cols="40" rows="5" onKeyUp="$('#codeHFU').html(hljs.highlight('sqf', $('#execFUnitScript').val()).value);"></textarea>
+        <button onclick="executeFromUnitScript()">Exec</button> 
+
+        <pre><code class="sqf" id="codeHFU"></code></pre>
+    </div>
 </body>
 </html>​

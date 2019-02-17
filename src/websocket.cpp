@@ -20,6 +20,7 @@
 #include <thread>
 #include <vector>
 #include <intercept.hpp>
+#include <filesystem>
 
 using json = nlohmann::json;
 using tcp = boost::asio::ip::tcp;               // from <boost/asio/ip/tcp.hpp>
@@ -423,7 +424,7 @@ public:
             std::vector<std::string> unitNames;
             {
                 intercept::client::invoker_lock lock;
-                for (auto& it : intercept::sqf::all_units()) {
+                for (auto& it : intercept::sqf::all_players()) {
                     unitNames.emplace_back(intercept::sqf::name(it));
                 }
             }
@@ -895,12 +896,33 @@ public:
 
 //------------------------------------------------------------------------------
 
+std::string thisDllDirPath()
+{
+    std::string thisPath = "";
+    CHAR path[MAX_PATH];
+    HMODULE hm;
+    if (GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS |
+        GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+        (LPSTR)& thisDllDirPath, &hm))
+    {
+        GetModuleFileNameA(hm, path, sizeof(path));
+        thisPath = std::string(path);
+    }
+    return thisPath;
+}
+
+
+
 Server::Server() {
 
     auto const address = net::ip::make_address("0.0.0.0");
     auto const port = static_cast<unsigned short>(8082);
 
-    std::string docroot("J:\\dev\\ArmaWebControl\\wdata");
+    std::filesystem::path dllPath(thisDllDirPath());
+
+   
+
+    std::string docroot((dllPath.parent_path() / "wdata").string());
 
     // Create and launch a listening port
     std::make_shared<listener>(
