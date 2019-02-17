@@ -28,6 +28,8 @@ namespace http = boost::beast::http;            // from <boost/beast/http.hpp>
 namespace websocket = boost::beast::websocket;  // from <boost/beast/websocket.hpp>
 namespace net = boost::asio;            // from <boost/asio.hpp>
 
+extern std::mutex frameLock;;
+
 // Return a reasonable mime type based on the extension of a file.
 boost::beast::string_view
 mime_type(boost::beast::string_view path)
@@ -387,11 +389,59 @@ public:
                     std::placeholders::_2)));
     }
 
+    json processTask(json& task) {
+        //#TODO make unordered_map with std::function
+        if (task["type"] == "getPlayerlist") {
+
+            std::vector<std::string> unitNames;
+            for (auto& it : intercept::sqf::all_players()) {
+                unitNames.emplace_back(intercept::sqf::name(it));
+            }
+
+            json playerMessage;
+            playerMessage["type"] = "playerlist";
+            playerMessage["players"] = unitNames;
+
+            return playerMessage;
+        } else if (task["type"] == "Exec") {
+            auto res = intercept::sqf::call(intercept::sqf::compile(static_cast<std::string_view>(task["script"])));
+
+            json playerMessage;
+            playerMessage["type"] = "ExecRet";
+            playerMessage["res"] = static_cast<std::string>(res);
+            if (task.find("watch") != task.end())
+                playerMessage["watch"] = task["watch"];
+
+            return playerMessage;
+        } else if (task["type"] == "ExecFunc") {
+            auto func = intercept::sqf::get_variable(intercept::sqf::mission_namespace(), static_cast<std::string_view>(task["fnc"]));
+
+            auto_array<game_value> args;
+            for (auto& it : task["args"]) {
+                if (it.is_number())
+                    args.emplace_back(static_cast<float>(it));
+                else if (it.is_string())
+                    args.emplace_back(static_cast<std::string_view>(it));
+                else if (it.is_boolean())
+                    args.emplace_back(static_cast<bool>(it));
+                else if (it.is_object())
+                    args.emplace_back(intercept::sqf::compile(static_cast<std::string_view>(it["code"])));
+            }
+
+            auto res = intercept::sqf::call(func, args);
+
+            json playerMessage;
+            playerMessage["type"] = "ExecRet";
+            playerMessage["res"] = static_cast<std::string>(res);
+            if (task.find("watch") != task.end())
+                playerMessage["watch"] = task["watch"];
+            return playerMessage;
+        }
+        return {};
+    }
+
     void
-        on_read(
-            boost::system::error_code ec,
-            std::size_t bytes_transferred)
-    {
+        on_read (boost::system::error_code ec, std::size_t bytes_transferred) {
         boost::ignore_unused(bytes_transferred);
 
         // Happens when the timer closes the socket
@@ -416,104 +466,34 @@ public:
         std::string message(buffers_to_string(buffer_.data()));
 
         auto task = json::parse(message,nullptr, false);
-
         ws_.text(ws_.got_text());
-        //#TODO make unordered_map with std::function
-        if (task["type"] == "getPlayerlist") {
-
-            std::vector<std::string> unitNames;
-            {
-                intercept::client::invoker_lock lock;
-                for (auto& it : intercept::sqf::all_players()) {
-                    unitNames.emplace_back(intercept::sqf::name(it));
-                }
+        //intercept::client::invoker_lock lock;
+        frameLock.lock();
+        if (task.is_array()) {
+            json result;
+            for (auto& it : task) {
+                result.emplace_back(processTask(it));
             }
-
-
-            json playerMessage;
-            playerMessage["type"] = "playerlist";
-
-            playerMessage["players"] = unitNames;
-
-            std::string msg = playerMessage.dump();
+            frameLock.unlock();
+            std::string msg = result.dump();
             buffer_.consume(buffer_.size()); //clear buffer
             auto n = buffer_copy(buffer_.prepare(msg.size()), boost::asio::buffer(msg));
             buffer_.commit(n);
-
-            ws_.async_write(
-                buffer_.data(),
-                std::bind(
-                    &websocket_session::on_write,
-                    shared_from_this(),
-                    std::placeholders::_1,
-                    std::placeholders::_2));
-        } else if (task["type"] == "Exec") {
-            intercept::client::invoker_lock lock;
-            auto res = intercept::sqf::call(intercept::sqf::compile(static_cast<std::string_view>(task["script"])));
-
-            json playerMessage;
-            playerMessage["type"] = "ExecRet";
-            playerMessage["res"] = static_cast<std::string>(res);
-
-            std::string msg = playerMessage.dump();
+        } else {
+            auto result = processTask(task);
+            frameLock.unlock();
+            std::string msg = result.dump();
             buffer_.consume(buffer_.size()); //clear buffer
             auto n = buffer_copy(buffer_.prepare(msg.size()), boost::asio::buffer(msg));
             buffer_.commit(n);
-
-            ws_.async_write(
-                buffer_.data(),
-                std::bind(
-                    &websocket_session::on_write,
-                    shared_from_this(),
-                    std::placeholders::_1,
-                    std::placeholders::_2));
-
-
-        } else if (task["type"] == "ExecFunc") {
-            intercept::client::invoker_lock lock;
-            auto func = intercept::sqf::get_variable(intercept::sqf::mission_namespace(), static_cast<std::string_view>(task["fnc"]));
-
-            auto_array<game_value> args;
-            for (auto& it : task["args"]) {
-                if (it.is_number())
-                    args.emplace_back(static_cast<float>(it));
-                else if (it.is_string())
-                    args.emplace_back(static_cast<std::string_view>(it));
-                else if (it.is_boolean())
-                    args.emplace_back(static_cast<bool>(it));
-                else if (it.is_object())
-                    args.emplace_back(intercept::sqf::compile(static_cast<std::string_view>(it["code"])));
-            }
-                
-
-            auto res = intercept::sqf::call(func,args);
-
-            json playerMessage;
-            playerMessage["type"] = "ExecRet";
-            playerMessage["res"] = static_cast<std::string>(res);
-
-            std::string msg = playerMessage.dump();
-            buffer_.consume(buffer_.size()); //clear buffer
-            auto n = buffer_copy(buffer_.prepare(msg.size()), boost::asio::buffer(msg));
-            buffer_.commit(n);
-
-            ws_.async_write(
-                buffer_.data(),
-                std::bind(
-                    &websocket_session::on_write,
-                    shared_from_this(),
-                    std::placeholders::_1,
-                    std::placeholders::_2));
         }
-        else {
-            ws_.async_write(
-                buffer_.data(),
-                std::bind(
-                    &websocket_session::on_write,
-                    shared_from_this(),
-                    std::placeholders::_1,
-                    std::placeholders::_2));
-        }
+        ws_.async_write(
+            buffer_.data(),
+            std::bind(
+                &websocket_session::on_write,
+                shared_from_this(),
+                std::placeholders::_1,
+                std::placeholders::_2));
     }
 
     void

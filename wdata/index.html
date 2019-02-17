@@ -33,6 +33,7 @@
         <button class="tablinks" onclick="openCity(event, 'ExecGlobal')">ExecGlobal</button>
         <button class="tablinks" onclick="openCity(event, 'ExecOnUnit')">ExecOnUnit</button>
         <button class="tablinks" onclick="openCity(event, 'ExecFromUnit')">ExecFromUnit</button>
+        <button class="tablinks" onclick="openCity(event, 'Watch')">Watch</button>
     </div>
 
     <!-- Tab content -->
@@ -94,5 +95,23 @@
 
         <pre><code class="sqf" id="codeHFU"></code></pre>
     </div>
+
+    <div id="Watch" class="tabcontent">
+        Debug console like watch stuff</br>
+        Update every: <input type="number" id="watchTimeout" min="0.1" max="600" step="0.1" value="0.5" size="4" onChange="updateWatchEnabled()"> seconds
+        <input type="checkbox" id="doUpdateWatch" name="doUpdateWatch" onChange="updateWatchEnabled()"></br>
+        <textarea id="WatchIn1" out="#WatchOut1" cols="40" rows="3" onKeyUp="$('#WatchOut1').html('')"></textarea>
+        <pre><code class="sqf" id="WatchOut1" in="#WatchIn1"></code></pre>
+        <textarea id="WatchIn2" out="#WatchOut2" cols="40" rows="3" onKeyUp="$('#WatchOut2').html('')"></textarea>
+        <pre><code class="sqf" id="WatchOut2" in="#WatchIn2"></code></pre>
+        <textarea id="WatchIn3" out="#WatchOut3" cols="40" rows="3" onKeyUp="$('#WatchOut3').html('')"></textarea>
+        <pre><code class="sqf" id="WatchOut3" in="#WatchIn3"></code></pre>
+        <textarea id="WatchIn4" out="#WatchOut4" cols="40" rows="3" onKeyUp="$('#WatchOut4').html('')"></textarea>
+        <pre><code class="sqf" id="WatchOut4" in="#WatchIn4"></code></pre>
+    </div>
+
+
+
+
 </body>
 </html>​

@@ -1,13 +1,35 @@
 var playerNames = [];
 var socket;
+var watchEnabled = false;
+var watchTimeoutID = null;
 
 function onMessage(data) {
-    message('<p class="message">Received: '+data);
+    //message('<p class="message">Received: '+data);
     var obj = JSON.parse(data);
 
-    if (obj.type == "playerlist") {
-        playerNames = obj.players;
-        updatePlayerlistCombo();
+    function processMessage(msg){
+        if (msg.type == "playerlist") {
+            playerNames = msg.players;
+            updatePlayerlistCombo();
+        }
+        if ('watch' in msg) {
+            $(msg.watch).html(hljs.highlight('sqf', msg.res).value);
+            $($(msg.watch).attr("in")).css('background', '#fff');
+
+            if (watchTimeoutID == null) {
+                watchTimeoutID =  setTimeout(function(){
+                    updateWatchFields();
+                    watchTimeoutID = null;
+                }, document.getElementById('watchTimeout').value * 1000);
+            }
+
+        }
+    }
+
+    if (obj.constructor === Array) {
+        obj.forEach(processMessage);
+    } else {
+        processMessage(obj);
     }
 }
 
@@ -72,7 +94,7 @@ function executeUnitScript() {
     socket.send(JSON.stringify(msg));
 }
 
-function executeFUnitScript() {
+function executeFromUnitScript() {
     var msg = {
         type: "ExecFunc",
         fnc: "ArmaWebControl_main_fnc_execFromUnit",
@@ -85,8 +107,6 @@ function executeFUnitScript() {
     }
     socket.send(JSON.stringify(msg));
 }
-
-
 
 function refreshPlayerList() {
     var msg = {
@@ -116,6 +136,36 @@ function loadPreset(combo, textbox, presetList, highlightBox){
 
     $(textbox).val(code);
     $(highlightBox).html(hljs.highlight('sqf', code).value);
+}
+
+function updateWatchFields() {
+    var tasks = [];
+    document.querySelectorAll('#Watch textarea').forEach((block) => {
+        if ($(block).val() != ""){
+            var msg = {
+                type: "Exec",
+                watch: $(block).attr("out"),
+                script: $(block).val()
+            }
+            tasks.push(msg);
+            $(block).css('background', '#ccc');
+        }
+    });
+    socket.send(JSON.stringify(tasks));
+}
+
+function updateWatchEnabled() {
+    var isEnabled = document.getElementById('doUpdateWatch').checked;
+
+    if (!isEnabled && watchTimeoutID != null) {
+        clearTimeout(watchTimeoutID);
+        watchTimeoutID = null;
+    } else if (isEnabled && watchTimeoutID == null) {
+        watchTimeoutID =  setTimeout(function(){
+            updateWatchFields();
+            watchTimeoutID = null;
+        }, document.getElementById('watchTimeout').value * 1000);
+    }
 }
 
 
@@ -175,12 +225,7 @@ $(document).ready(function() {
     fillPresets('#localPreset', presets_Local);
     fillPresets('#globalPreset', presets_Global);
     fillPresets('#unitPreset2', presets_FromUnit);
-
-    document.querySelectorAll('textarea').forEach((block) => {
-        hljs.highlightBlock(block);
-    });
-
-
+    updateWatchEnabled();
 });
 
 function openCity(evt, cityName) {
