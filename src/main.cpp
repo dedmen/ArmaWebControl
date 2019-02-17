@@ -1,5 +1,6 @@
 #include <intercept.hpp>
-
+#include <boost/beast.hpp>
+#include "websocket.hpp"
 
 int intercept::api_version() { //This is required for the plugin to work.
     return 1;
@@ -8,9 +9,9 @@ int intercept::api_version() { //This is required for the plugin to work.
 void intercept::register_interfaces() {
     
 }
-
+std::shared_ptr<Server> serv;
 void intercept::pre_start() {
-    
+    serv = std::make_shared<Server>();
 }
 
 void intercept::pre_init() {

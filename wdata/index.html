@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.4.2/jquery.min.js"></script>
+    <script src="presets_local.js"></script>
+    <script src="presets_global.js"></script>
+    <script src="presets_unit.js"></script>
+    <script src="presets_all.js"></script>
+    <script src="script.js"></script> 
+    <link rel="stylesheet" href="style.css">
+
+    <title>Arma Web Control</title>
+</head>
+<body>
+
+    <h1>Arma Web Control</h1>
+
+    <div class="tab">
+        <button class="tablinks" onclick="openCity(event, 'Dev')">Dev</button>
+        <button class="tablinks" onclick="openCity(event, 'ExecLocal')">ExecLocal</button>
+        <button class="tablinks" onclick="openCity(event, 'ExecGlobal')">ExecGlobal</button>
+        <button class="tablinks" onclick="openCity(event, 'ExecOnUnit')">ExecOnUnit</button>
+    </div>
+
+    <!-- Tab content -->
+    <div id="Dev" class="tabcontent">
+        <div id="wrapper">
+            <div id="container">
+                <div id="chatLog">
+                </div><!-- #chatLog -->
+                <p id="examples">e.g. try 'hi', 'name', 'age', 'today'</p>
+                <input id="text" type="text" />
+                <button id="disconnect">Disconnect</button>
+            </div><!-- #container -->
+        </div>
+    </div>
+
+    <div id="ExecLocal" class="tabcontent">
+        <select id="localPreset"></select>
+        <button onclick="loadPreset('#localPreset', '#execLocalScript',presets_local)">Load</button> 
+        <textarea id="execLocalScript"cols="40" rows="5"></textarea>
+        <button onclick="executeLocalScript()">Exec</button> 
+    </div>
+
+    <div id="ExecGlobal" class="tabcontent">
+        <select id="globalPreset"></select>
+        <button onclick="loadPreset('#globalPreset', '#execGlobalScript',presets_Global)">Load</button> 
+        <textarea id="execGlobalScript"cols="40" rows="5"></textarea>
+        <button onclick="executeGlobalScript()">Exec</button> 
+    </div>
+
+
+    <div id="ExecOnUnit" class="tabcontent">
+        <select id="unitlist"></select>
+        <button onclick="refreshPlayerList()">Update playerlist</button> 
+        <select id="unitPreset"></select>
+        <button onclick="loadPreset('#unitPreset', '#execUnitScript',presets_Unit)">Load</button> 
+        <textarea id="execUnitScript"cols="40" rows="5"></textarea>
+        <button onclick="executeUnitScript()">Exec</button> 
+    </div>
+
+</body>
+</html>​
