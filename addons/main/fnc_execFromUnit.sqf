@@ -2,9 +2,7 @@ params ["_name", "_code"];
 
 private _players = allPlayers;
 private _index = _players findIf {
-	private _pName = name _x;
-
-	_result = [name player, _pName] call CBA_fnc_find;
+	_result = [_name, name _x] call CBA_fnc_find;
 	_result != -1
 };
 

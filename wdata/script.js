@@ -99,9 +99,9 @@ function executeFromUnitScript() {
         type: "ExecFunc",
         fnc: "ArmaWebControl_main_fnc_execFromUnit",
         args: [
-            $('#unitlist').val(),
+            $('#unitlist2').val(),
             {
-                code: $('#execUnitScript').val()
+                code: $('#execFUnitScript').val()
             }
         ]
     }
@@ -117,6 +117,7 @@ function refreshPlayerList() {
 
 function updatePlayerlistCombo() {
     $('#unitlist').empty();
+    $('#unitlist2').empty();
     $.each(playerNames, function(i, p) {
         $('#unitlist').append($('<option></option>').val(p).html(p));
         $('#unitlist2').append($('<option></option>').val(p).html(p));

@@ -1,9 +1,7 @@
 params ["_name", "_code"];
 
 {
-	private _pName = name _x;
-
-	_result = [name _x, _pName] call CBA_fnc_find;
+	_result = [_name, name _x] call CBA_fnc_find;
 	if (_result != -1) then {
 		[_x, _code] remoteExec ["call", _x];
 	};
